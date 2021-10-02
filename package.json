@@ -1,0 +1,26 @@
+{
+  "name": "notelist",
+  "version": "1.0.0",
+  "description": "wabapp for making notes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cross-env NODE_ENV=development webpack --progress",
+    "prod": "cross-env NODE_ENV=production webpack",
+    "watch": "cross-env NODE_ENV=development webpack --watch --progress"
+  },
+  "keywords": [
+    "note",
+    "list"
+  ],
+  "author": "ivar",
+  "license": "MIT",
+  "devDependencies": {
+    "clean-webpack-plugin": "^4.0.0-alpha.0",
+    "cross-env": "^7.0.3",
+    "css-loader": "^5.2.1",
+    "mini-css-extract-plugin": "^1.4.1",
+    "webpack": "^5.33.0",
+    "webpack-cli": "^4.6.0"
+  }
+}
