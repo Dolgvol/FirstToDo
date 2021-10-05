@@ -1,14 +1,9 @@
 "use strict"
 import Storage from './storage'
 
-
-let formMain = document.forms[0]
-let formCategory = formMain.elements.category
-let formName = formMain.elements.name
-let formContent = formMain.elements.content
-
 const mainTable = document.querySelector('#table-main1');
-const filterBlock = document.querySelector('#filter-block1');
+const filterBlock = document.querySelector('#filter1');
+const submitBlock = document.querySelector('#submit-block1');
 
 const viewModal = document.querySelector('.wrapper-view');
 const createEditModal = document.querySelector('.wrapper-edit');
@@ -18,99 +13,152 @@ const closeModalButtons = document.querySelectorAll('.close-btn-modal');
 // mainTable.addEventListener("click", (event) => {
 //    console.log('sdad');   
 // })
-// mainTable.dispatchEvent(eventCreate)
+// mainTable.dispatchEvent(eventCreate);
+
+let stateOfList = 'all';
+if (filterBlock) {
+   filterBlock.addEventListener("change", (event) => {
+      console.log('1');
+      
+      if (filterBlock.value === 'active') {
+         console.log('2');
+
+         stateOfList = 'active';
+         renderTable(stateOfList);
+      }
+      if (filterBlock.value === 'archived') {
+         console.log('3');
+
+         stateOfList = 'archived';
+         renderTable(stateOfList);
+      }
+      if (filterBlock.value === 'all') {
+         stateOfList = 'all';
+         renderTable(stateOfList);
+      }
+   });
+}
 
 if (mainTable) {
       mainTable.addEventListener("click", (event) => {
          let actionEl = event.target.closest('[data-action]');
-         // console.log(actionEl)
+         // console.log(actionEl);
 
          if (actionEl && actionEl.dataset.action === 'open') {
-            viewModal.style.display = 'block';  
-          };
+            viewModal.style.display = 'block'; 
+            const currentItem = Storage.getItem(actionEl.dataset.id);
+            renderViewModal(currentItem);
+          }
          
          if (actionEl && actionEl.dataset.action === 'edit') {
             createEditModal.style.display = 'block';
-          };
+            const currentItem = Storage.getItem(actionEl.dataset.id);
+            renderEditModal(currentItem, actionEl.dataset.id);
+          }
 
          if (actionEl && actionEl.dataset.action === 'create') {
-            createEditModal.style.display = 'block';
-         };
+            createEditModal.style.display = 'block';         
+            renderCreateModal(Storage.getList('all').length);
+         }
           
          if (actionEl && actionEl.dataset.action === 'delete') {
             if (Storage.deleteItem(actionEl.dataset.id)) {
-               renderTable();
+               renderTable(stateOfList);
+               renderCategoryCounter();
             }
-         };
+         }
 
          if (actionEl && actionEl.dataset.action === 'archive') {
             if (Storage.archiveItem(actionEl.dataset.id)) {
-               renderTable();
+               renderTable(stateOfList);
+               renderCategoryCounter();
             }
-         };
+         }
 
          if (actionEl && actionEl.dataset.action === 'activate') {
             if (Storage.activateItem(actionEl.dataset.id)) {
-               renderTable();
+               renderTable(stateOfList);
+               renderCategoryCounter();
             }
-         };
+         }
 
          if (actionEl && actionEl.dataset.action === 'archive-all') {
             if (Storage.archiveAllItems()) {
-               renderTable();
+               renderTable(stateOfList);
+               renderCategoryCounter();
             }
-         };
+         }
 
          if (actionEl && actionEl.dataset.action === 'delete-all') {
             if (Storage.deleteAllItems()) {
-               renderTable();
+               renderTable(stateOfList);
+               renderCategoryCounter();
             }
-         };
+         }
 
       });
-};
+}
 
+submitBlock.addEventListener("click", (event) => {
+   event.preventDefault();
+   let actionEl = event.target.closest('[data-action]');
+   console.log('submit');   
+
+   if (actionEl.dataset.action === 'edit') {
+      Storage.editItem(actionEl.dataset.id, createPayload(Storage.getItem(actionEl.dataset.id).active));
+      createEditModal.style.display = 'none'; 
+      renderTable(stateOfList);    
+      // console.log(Storage.getList('all'));     
+   }
+   if (actionEl.dataset.action === 'create') {
+      Storage.createItem(createPayload());
+      createEditModal.style.display = 'none'; 
+      renderTable(stateOfList);   
+      renderCategoryCounter(); 
+      // console.log(Storage.getList('all'));        
+   }
+});
 
 if (closeModalButtons) {
    for (const closeModalBtn of closeModalButtons) {
       closeModalBtn.addEventListener("click", () => {
          closeModalBtn.parentElement.parentElement.parentElement.style.display = 'none';
       });
-   };
-};
+   }
+}
 
 if (viewModal) {
    viewModal.addEventListener("click", (event) => {
       let target = event.target;
       if (target.className === 'wrapper-view') {
          viewModal.style.display = 'none';
-      };
+      }
    });
-};
+}
 
 if (createEditModal) {
    createEditModal.addEventListener("click", (event) => {
       let target = event.target;
       if (target.className === 'wrapper-edit') {
          createEditModal.style.display = 'none';
-      };
+      }
    });
-};
+}
 
 
 
 
-renderTable()
-function renderTable() {
+renderTable(stateOfList)
+function renderTable(filter) {
    console.log('render');   
    const table = document.getElementById('items1')
-   const list = Storage.getList();
+   const list = Storage.getList(filter);
    table.innerHTML = '';
    let archiveSvg = '';
    let categorySvg = '';
-   list.forEach((element, index) => {
+   list.forEach((object, index) => {
       const newDiv = document.createElement("div");
-      if (element.active) {
+      if (object.active) {
          archiveSvg = `<a class='archive-current managment-icon' data-id="${index}" data-action="archive">
          <svg width="25px" height="25px" fill="#777777" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="download" 
          class="fa-archive g-svg" role="img" 
@@ -123,19 +171,19 @@ function renderTable() {
          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M296 384h-80c-13.3 0-24-10.7-24-24V192h-87.7c-17.8 0-26.7-21.5-14.1-34.1L242.3 5.7c7.5-7.5 19.8-7.5 27.3 0l152.2 152.2c12.6 12.6 3.7 34.1-14.1 34.1H320v168c0 13.3-10.7 24-24 24zm216-8v112c0 13.3-10.7 24-24 24H24c-13.3 0-24-10.7-24-24V376c0-13.3 10.7-24 24-24h136v8c0 30.9 25.1 56 56 56h80c30.9 0 56-25.1 56-56v-8h136c13.3 0 24 10.7 24 24zm-124 88c0-11-9-20-20-20s-20 9-20 20 9 20 20 20 20-9 20-20zm64 0c0-11-9-20-20-20s-20 9-20 20 9 20 20 20 20-9 20-20z"></path></svg>
          </a>`;
       }
-      if (element.category === 'Task') {
+      if (object.category === 'Task') {
          categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="shopping-cart" 
          class="fa-shopping-cart w-svg" role="img" 
          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z"></path></svg>
          `;
       } 
-      if (element.category === 'Random Thought') {
+      if (object.category === 'Random Thought') {
          categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="brain" 
          class="fa-brain w-svg" role="img" 
          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M208 0c-29.9 0-54.7 20.5-61.8 48.2-.8 0-1.4-.2-2.2-.2-35.3 0-64 28.7-64 64 0 4.8.6 9.5 1.7 14C52.5 138 32 166.6 32 200c0 12.6 3.2 24.3 8.3 34.9C16.3 248.7 0 274.3 0 304c0 33.3 20.4 61.9 49.4 73.9-.9 4.6-1.4 9.3-1.4 14.1 0 39.8 32.2 72 72 72 4.1 0 8.1-.5 12-1.2 9.6 28.5 36.2 49.2 68 49.2 39.8 0 72-32.2 72-72V64c0-35.3-28.7-64-64-64zm368 304c0-29.7-16.3-55.3-40.3-69.1 5.2-10.6 8.3-22.3 8.3-34.9 0-33.4-20.5-62-49.7-74 1-4.5 1.7-9.2 1.7-14 0-35.3-28.7-64-64-64-.8 0-1.5.2-2.2.2C422.7 20.5 397.9 0 368 0c-35.3 0-64 28.6-64 64v376c0 39.8 32.2 72 72 72 31.8 0 58.4-20.7 68-49.2 3.9.7 7.9 1.2 12 1.2 39.8 0 72-32.2 72-72 0-4.8-.5-9.5-1.4-14.1 29-12 49.4-40.6 49.4-73.9z"></path></svg>
        `;
       } 
-      if (element.category === 'Idea') {
+      if (object.category === 'Idea') {
          categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="far" data-icon="lightbulb" 
          class="fa-lightbulb w-svg" role="img" 
          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path d="M176 80c-52.94 0-96 43.06-96 96 0 8.84 7.16 16 16 16s16-7.16 16-16c0-35.3 28.72-64 64-64 8.84 0 16-7.16 16-16s-7.16-16-16-16zM96.06 459.17c0 3.15.93 6.22 2.68 8.84l24.51 36.84c2.97 4.46 7.97 7.14 13.32 7.14h78.85c5.36 0 10.36-2.68 13.32-7.14l24.51-36.84c1.74-2.62 2.67-5.7 2.68-8.84l.05-43.18H96.02l.04 43.18zM176 0C73.72 0 0 82.97 0 176c0 44.37 16.45 84.85 43.56 115.78 16.64 18.99 42.74 58.8 52.42 92.16v.06h48v-.12c-.01-4.77-.72-9.51-2.15-14.07-5.59-17.81-22.82-64.77-62.17-109.67-20.54-23.43-31.52-53.15-31.61-84.14-.2-73.64 59.67-128 127.95-128 70.58 0 128 57.42 128 128 0 30.97-11.24 60.85-31.65 84.14-39.11 44.61-56.42 91.47-62.1 109.46a47.507 47.507 0 0 0-2.22 14.3v.1h48v-.05c9.68-33.37 35.78-73.18 52.42-92.16C335.55 260.85 352 220.37 352 176 352 78.8 273.2 0 176 0z"></path></svg>
@@ -147,11 +195,11 @@ function renderTable() {
         ${categorySvg}
         </div>
       </div>
-      <div class="item-name item-cell">${element.name}</div>
-      <div class="item-created item-cell">${element.created}</div>
-      <div class="item-category item-cell">${element.category}</div>
-      <div class="item-content item-cell">${element.content}</div>
-      <div class="item-dates item-cell">${element.dates}</div>    
+      <div class="item-name item-cell">${object.name}</div>
+      <div class="item-created item-cell">${object.created}</div>
+      <div class="item-category item-cell">${object.category}</div>
+      <div class="item-content item-cell">${object.content}</div>
+      <div class="item-dates item-cell">${object.dates}</div>    
       <div class="item-managment">
          <a class="open-modal managment-icon" data-id="${index}" data-action="open">
          <svg width="25px" height="25px" fill="#777777" aria-hidden="true" focusable="false" data-prefix="far" data-icon="eye" 
@@ -172,122 +220,155 @@ function renderTable() {
          </a>
       </div>`;
       newDiv.classList.add('item-row');
-      if (element.active) {
+      if (object.active) {
          newDiv.classList.add('active');
       } else {
          newDiv.classList.add('archived');
       }
       setTimeout(() => table.appendChild(newDiv));
    });
-};
+}
 
 
 
+function renderViewModal(object) {
+   const viewModal = document.getElementById('modal-view-block1');
+   let categorySvg = '';
+   if (object.category === 'Task') {
+      categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="shopping-cart" 
+      class="fa-shopping-cart w-svg" role="img" 
+      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z"></path></svg>
+      `;
+   } 
+   if (object.category === 'Random Thought') {
+      categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="brain" 
+      class="fa-brain w-svg" role="img" 
+      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M208 0c-29.9 0-54.7 20.5-61.8 48.2-.8 0-1.4-.2-2.2-.2-35.3 0-64 28.7-64 64 0 4.8.6 9.5 1.7 14C52.5 138 32 166.6 32 200c0 12.6 3.2 24.3 8.3 34.9C16.3 248.7 0 274.3 0 304c0 33.3 20.4 61.9 49.4 73.9-.9 4.6-1.4 9.3-1.4 14.1 0 39.8 32.2 72 72 72 4.1 0 8.1-.5 12-1.2 9.6 28.5 36.2 49.2 68 49.2 39.8 0 72-32.2 72-72V64c0-35.3-28.7-64-64-64zm368 304c0-29.7-16.3-55.3-40.3-69.1 5.2-10.6 8.3-22.3 8.3-34.9 0-33.4-20.5-62-49.7-74 1-4.5 1.7-9.2 1.7-14 0-35.3-28.7-64-64-64-.8 0-1.5.2-2.2.2C422.7 20.5 397.9 0 368 0c-35.3 0-64 28.6-64 64v376c0 39.8 32.2 72 72 72 31.8 0 58.4-20.7 68-49.2 3.9.7 7.9 1.2 12 1.2 39.8 0 72-32.2 72-72 0-4.8-.5-9.5-1.4-14.1 29-12 49.4-40.6 49.4-73.9z"></path></svg>
+    `;
+   } 
+   if (object.category === 'Idea') {
+      categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="far" data-icon="lightbulb" 
+      class="fa-lightbulb w-svg" role="img" 
+      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path d="M176 80c-52.94 0-96 43.06-96 96 0 8.84 7.16 16 16 16s16-7.16 16-16c0-35.3 28.72-64 64-64 8.84 0 16-7.16 16-16s-7.16-16-16-16zM96.06 459.17c0 3.15.93 6.22 2.68 8.84l24.51 36.84c2.97 4.46 7.97 7.14 13.32 7.14h78.85c5.36 0 10.36-2.68 13.32-7.14l24.51-36.84c1.74-2.62 2.67-5.7 2.68-8.84l.05-43.18H96.02l.04 43.18zM176 0C73.72 0 0 82.97 0 176c0 44.37 16.45 84.85 43.56 115.78 16.64 18.99 42.74 58.8 52.42 92.16v.06h48v-.12c-.01-4.77-.72-9.51-2.15-14.07-5.59-17.81-22.82-64.77-62.17-109.67-20.54-23.43-31.52-53.15-31.61-84.14-.2-73.64 59.67-128 127.95-128 70.58 0 128 57.42 128 128 0 30.97-11.24 60.85-31.65 84.14-39.11 44.61-56.42 91.47-62.1 109.46a47.507 47.507 0 0 0-2.22 14.3v.1h48v-.05c9.68-33.37 35.78-73.18 52.42-92.16C335.55 260.85 352 220.37 352 176 352 78.8 273.2 0 176 0z"></path></svg>
+    `;
+   } 
+   viewModal.innerHTML = '';
+   viewModal.innerHTML = ` 
+   <div class="view-created">
+   <div class="head-created">
+     created:
+   </div>
+   <div class="text-created fill-view">
+   ${object.created}
+   </div>
+   </div>
+   <div class="view-title">
+   <div class="icon-wrapper fill-view">
+   ${categorySvg}
+   </div>
+   <div class="view-category fill-view">
+   ${object.category}
+   </div>
+   </div>
+   <div class="view-name fill-view">
+   ${object.name}
+   </div>
+   <div class="view-content fill-view">
+   ${object.content}
+   </div>
+   <div class="view-dates fill-view">
+   ${object.dates}
+   </div>`;
+}
 
 
-
-function fillViewModal(object) {
-   const fillView = document.querySelectorAll('.fill-view');
-
-   for (let element of fillView) {
-      if (element && element.classList.contains('text-created')) {
-         element.textContent = object.created;
-      };
-      if (element && element.classList.contains('icon-wrapper')) {
-         // element.innerHTML = ;
-      };
-      if (element && element.classList.contains('view-category')) {
-         element.textContent = object.category;
-      };
-      if (element && element.classList.contains('view-name')) {
-         element.textContent = object.name;
-      };
-      if (element && element.classList.contains('view-content')) {
-         element.textContent = object.content;
-      };
-      if (element && element.classList.contains('view-dates')) {
-
-      };
-   };
-};
-
-
-
-function fillEditModal(object) {
+function renderEditModal(object, index) {
    const fillEdit = document.querySelectorAll('.fill-edit');
-
    for (let element of fillEdit) {
       if (element && element.classList.contains('edit-category')) {
          element.value = object.category;
-      };
-
+      }
       if (element && element.classList.contains('edit-name')) {
          element.value = object.name;
-      };
-
+      }
       if (element && element.classList.contains('edit-content')) {
          element.value = object.content;
-      };
+      }
+   }
+   submitBlock.innerHTML = '';
+   submitBlock.innerHTML = `<button class="submit-btn" id="submit-btn1" type="button"
+   data-action="edit" data-id="${index}">Submit</button>`;
+}
+
+function renderCreateModal(index) {
+   const fillEdit = document.querySelectorAll('.fill-edit');
+   for (let element of fillEdit) {
+      if (element && element.classList.contains('edit-category')) {
+         element.value = '';
+      }
+      if (element && element.classList.contains('edit-name')) {
+         element.value = '';
+      }
+      if (element && element.classList.contains('edit-content')) {
+         element.value = '';
+      }
+   }
+   submitBlock.innerHTML = '';
+   submitBlock.innerHTML = `<button class="submit-btn" id="submit-btn1" type="button"
+   data-action="create" data-id="${index}">Submit</button>`;
+}
+
+
+function createPayload(status = true) {
+   const formMain = document.forms[0]
+   return {
+      active: status,
+      category: formMain.elements.category.value,
+      name: formMain.elements.name.value,
+      content: formMain.elements.content.value,
    };
-};
+}
 
 
 
+function filterNotes(filter) {
+   const inputArray = Storage.getList(filter);
+   const objOfArrays = {};
+
+   inputArray.forEach((object, index) => {
+      if (objOfArrays.hasOwnProperty(object.category)) {
+         objOfArrays[object.category].push(object);
+      } else {
+         objOfArrays[object.category] = [object];
+      }
+   });
+   console.log(objOfArrays);   
+   return objOfArrays;
+}
 
 
-
-
-// let activeNotes = itemsNotes.filter(obj => obj.active === true);
-
-// let archivedNotes = itemsNotes.filter(obj => obj.active === false);
-
-
-
-//    let objOfArrays = {};
-//    filterNotes(archivedNotes);
-//    console.log(objOfArrays);
-//    console.log(Object.keys(objOfArrays).length );
-
-
-// function filterNotes(inputArray) {
-
-//    for (let inputElement of inputArray) {
-
-//       if (Object.keys(objOfArrays).length === 0) {
-//          let tempArray = [];
-//          tempArray.push(inputElement);
-//          objOfArrays[inputElement.category] = 'zalupa';
-
-//       } else {
-
-//          for (let categoryKey in objOfArrays) {
-//             if (objOfArrays.hasOwnProperty(categoryKey)) {
-//                objOfArrays[categoryKey] = [].push(inputElement);
-//             } else {
-//                objOfArrays[inputElement.category] = [].push(inputElement);
-//             };
-//          };
-
-//       };
-
-//    };
-   
-// };
-
-
-
-// function putAmountInBlock(objOfarr) {
-//    const categoryCounters = document.querySelectorAll('.item-notecategory');
-
-//    for (const categoryCounter of categoryCounters) {
-//       let activeCounter = categoryCounter.firstElementChild;
-//       let archivedCounter = categoryCounter.lastElementChild;
-
-//       for (let categoryKey in objOfarr) {
-//          if (categoryKey == categoryCounter.textContent) {
-//             archivedCounter.textContent = objOfarr[categoryKey].length;
-//          };
-//       };
-
-//    };
-// };
+renderCategoryCounter();
+function renderCategoryCounter() {
+   const counterCells = document.querySelectorAll('.counter-cell');
+   if (counterCells) {
+      const archived = filterNotes('archived');
+      const active = filterNotes('active');
+      counterCells.forEach((element, index) => {
+      
+         if (element.classList.contains('item-archived')) {
+            if (archived.hasOwnProperty(element.dataset.counter)) {
+               element.textContent = archived[element.dataset.counter].length;
+            } else {
+               element.textContent = 0;
+            }
+         }
+         if (element.classList.contains('item-active')) {
+            if (active.hasOwnProperty(element.dataset.counter)) {
+               element.textContent = active[element.dataset.counter].length;
+            } else {
+               element.textContent = 0;
+            }
+         }
+      });
+   }
+}

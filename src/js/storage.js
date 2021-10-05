@@ -1,5 +1,5 @@
 "use strict"
-import {makeItem} from './helpers'
+import {makeItem, getCurrentDate} from './helpers'
 
 const itemsNotes = [
    {
@@ -55,22 +55,26 @@ const itemsNotes = [
 ];
 
 
+itemsNotes.forEach((itemNote, index) => {
+   const updated = makeItem(itemNote);
+   itemsNotes.splice(index, 1, updated);   
+});
 
 
 function createItem(payload) {
-   itemsNotes.push(makeItem(payload));
+   itemsNotes.push(makeItem(payload, getCurrentDate()));
    return true;
-};
+}
 
 function editItem(index, payload) {
    if (index >= 0 && index < itemsNotes.length) {
       const old = itemsNotes[index];
-      const updated = makeItem({...old, ...payload});
+      const updated = makeItem({...old, ...payload}, getCurrentDate());
       itemsNotes.splice(index, 1, updated);
       return true;
    }
    return false;
-};
+}
 
 function deleteItem(index) {
    if (index >= 0 && index < itemsNotes.length) {
@@ -78,7 +82,7 @@ function deleteItem(index) {
       return true;
    }
    return false;
-};
+}
 
 function archiveItem(index) {
    if (index >= 0 && index < itemsNotes.length && itemsNotes[index].active) {
@@ -86,7 +90,7 @@ function archiveItem(index) {
       return true;
    }
    return false;
-};
+}
 
 function activateItem(index) {
    if (index >= 0 && index < itemsNotes.length && !itemsNotes[index].active) {
@@ -94,12 +98,12 @@ function activateItem(index) {
       return true;
    }
    return false;
-};
+}
 
 function deleteAllItems() {
    itemsNotes.length = 0;
    return true;
-};
+}
 
 function archiveAllItems() {
    return itemsNotes.reduce((isChanged, current) => {
@@ -109,11 +113,23 @@ function archiveAllItems() {
       }
       return isChanged;
    }, false);
-};
+}
 
 function getList(filter) {
-   return [...itemsNotes];
-};
+   if (filter === 'all') {
+      return [...itemsNotes];
+   }
+   if (filter === 'active') {
+      return [...itemsNotes.filter(obj => obj.active === true)];
+   }
+   if (filter === 'archived') {
+      return [...itemsNotes.filter(obj => obj.active === false)];
+   }
+}
+
+function getItem(index) {
+   return itemsNotes[index];
+}
 
 
 export default {
@@ -124,5 +140,6 @@ export default {
    activateItem, 
    deleteAllItems, 
    archiveAllItems,
-   getList
-};
+   getList,
+   getItem,
+}

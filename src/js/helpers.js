@@ -1,14 +1,15 @@
+"use strict"
 
-function makeItem(payload) {
+function makeItem(payload, created = payload.created) {
    return {
       active: payload.active,
       category: payload.category,
-      created: getCurrentDate(),
+      created: created,
       name: payload.name,
       content: payload.content,
-      dates: getDatesFromText(payload?.content || ''),
+      dates: getDatesFromText(payload?.content),
    };
- }; 
+ }
 
  function getCurrentDate() {
    let todayDate = new Date();
@@ -21,13 +22,19 @@ function makeItem(payload) {
 
    let dateInFormat = curMonth + ' ' + dayDate + ', ' + yearDate;
    return dateInFormat;
-};
+}
 
 function getDatesFromText(text) {
-   let datesInText = text.match(/\d{1,2}([.\-/ ])\d{1,2}([.\-/ ])\d{4}/gu);   
-   return datesInText.join(', ');
-};
+   let datesInText = text.match(/\d{1,2}([_|.\-/ ])\d{1,2}([_|.\-/ ])\d{2,4}/gu);  
+   if (datesInText) {
+      let datesString = datesInText.join(', ');
+      return datesString;
+   } else {
+      return '';
+   }
+}
 
-export default {
-   makeItem
-};
+export {
+   makeItem,
+   getCurrentDate
+}
