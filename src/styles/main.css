@@ -462,20 +462,6 @@ body {
          width: 400px;
       }
 
-      /* .wrapper-edit .modal-edit .edit-form .edit-text-date { */
-         /* display: block; */
-         /* margin: 20px 0 3px 0; */
-      /* } */
-      /* .wrapper-edit .modal-edit .edit-form .edit-date { */
-         /* display: block; */
-         /* cursor: pointer; */
-      /* } */
-      /* .wrapper-edit .modal-edit .edit-form .date-btn { */
-         /* display: block; */
-         /* margin: 20px 0 3px 0; */
-         /* cursor: pointer; */
-      /* } */
-
       .wrapper-edit .modal-edit .edit-form .submit-block {  
          display: flex;
          justify-content: center;

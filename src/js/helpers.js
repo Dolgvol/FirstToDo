@@ -1,10 +1,13 @@
 "use strict"
 
-function makeItem(payload, created = payload.created) {
+let nextId = 1;
+
+function makeItem(payload) {
    return {
+      id: nextId++,
       active: payload.active,
       category: payload.category,
-      created: created,
+      created: payload.created || getCurrentDate(),
       name: payload.name,
       content: payload.content,
       dates: getDatesFromText(payload?.content),
@@ -36,5 +39,4 @@ function getDatesFromText(text) {
 
 export {
    makeItem,
-   getCurrentDate
 }

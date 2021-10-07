@@ -1,4 +1,4 @@
 
 import './styles/main.css';
 
-import './js/app.js';
+import './js/render.js';

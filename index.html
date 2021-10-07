@@ -152,6 +152,10 @@
 
       <form name="edit-form" class="edit-form">
 
+        <input type="hidden" name="action">
+        <input type="hidden" name="id">
+
+
         
         <label class="edit-lable" for="category1">Category</label>
         <select name="category" class="edit-category fill-edit" id="category1">
@@ -162,7 +166,7 @@
 
 
         <label class="edit-lable" for="name1">Name</label>
-        <textarea class="edit-name fill-edit" id="name1" name="name"> </textarea>
+        <input class="edit-name fill-edit" id="name1" name="name"> 
 
         <label class="edit-lable" for="content1">Content</label>
         <textarea class="edit-content fill-edit" id="content1" name="content"> </textarea>
@@ -170,8 +174,11 @@
 
 
         <div class="submit-block" id="submit-block1">
-
+          <button class="submit-btn" id="submit-btn1" type="submit"
+            >Submit</button>
         </div>
+
+
 
       </form>
 

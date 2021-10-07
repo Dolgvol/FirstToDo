@@ -1,7 +1,8 @@
 "use strict"
-import {makeItem, getCurrentDate} from './helpers'
+import {makeItem, getCurrentDate} from './helpers';
 
-const itemsNotes = [
+
+const initialNotes = [
    {
       active: true,
       category: 'Task',
@@ -54,81 +55,96 @@ const itemsNotes = [
    },
 ];
 
+const state = {
+   itemsNotes: [],
+}
 
-itemsNotes.forEach((itemNote, index) => {
-   const updated = makeItem(itemNote);
-   itemsNotes.splice(index, 1, updated);   
+
+state.itemsNotes = initialNotes.map((itemNote) => {
+   return makeItem(itemNote);
 });
 
 
 function createItem(payload) {
-   itemsNotes.push(makeItem(payload, getCurrentDate()));
+   state.itemsNotes = [...state.itemsNotes, makeItem(payload)];
    return true;
 }
 
-function editItem(index, payload) {
-   if (index >= 0 && index < itemsNotes.length) {
-      const old = itemsNotes[index];
-      const updated = makeItem({...old, ...payload}, getCurrentDate());
-      itemsNotes.splice(index, 1, updated);
-      return true;
-   }
-   return false;
+function editItem(id, payload) {
+   let res = false;
+   state.itemsNotes = state.itemsNotes.map((itemNote) => {
+      if (itemNote.id === Number(id)) {
+         res = true;
+         return makeItem({...itemNote, ...payload});
+      }
+      return itemNote;
+   });
+   return res;
 }
 
-function deleteItem(index) {
-   if (index >= 0 && index < itemsNotes.length) {
-      itemsNotes.splice(index, 1);
-      return true;
-   }
-   return false;
-}
-
-function archiveItem(index) {
-   if (index >= 0 && index < itemsNotes.length && itemsNotes[index].active) {
-      itemsNotes[index].active = false;
-      return true;
-   }
-   return false;
-}
-
-function activateItem(index) {
-   if (index >= 0 && index < itemsNotes.length && !itemsNotes[index].active) {
-      itemsNotes[index].active = true;
-      return true;
-   }
-   return false;
+function deleteItem(id) {
+   const newNotes = [];
+   let res = false;
+   state.itemsNotes.forEach((itemNote) => {
+      if (itemNote.id === Number(id)) {
+         res = true;
+      } else {
+         newNotes.push(itemNote)
+      }
+   });
+   state.itemsNotes = newNotes;
+   return res;
 }
 
 function deleteAllItems() {
-   itemsNotes.length = 0;
+   state.itemsNotes = [];
    return true;
 }
 
 function archiveAllItems() {
-   return itemsNotes.reduce((isChanged, current) => {
-      if (current.active) {
-         current.active = false;
-         isChanged = true;
+   let res = false;
+   state.itemsNotes = state.itemsNotes.map((itemNote) => {
+      if (itemNote.active) {
+         res = true;
+         return {
+            ...itemNote, 
+            active: false,
+         }
       }
-      return isChanged;
-   }, false);
+      return itemNote
+   });
+   return res;
+}
+
+function getItem(id) {
+   return state.itemsNotes.find((itemNote) => itemNote.id === Number(id));
 }
 
 function getList(filter) {
    if (filter === 'all') {
-      return [...itemsNotes];
+      return [...state.itemsNotes];
    }
    if (filter === 'active') {
-      return [...itemsNotes.filter(obj => obj.active === true)];
+      return state.itemsNotes.filter(obj => obj.active === true);
    }
    if (filter === 'archived') {
-      return [...itemsNotes.filter(obj => obj.active === false)];
+      return state.itemsNotes.filter(obj => obj.active === false);
    }
 }
 
-function getItem(index) {
-   return itemsNotes[index];
+function filterNotes(filter) {
+   const inputArray = getList(filter);
+   const objOfArrays = {};
+
+   inputArray.forEach((object) => {
+      if (objOfArrays.hasOwnProperty(object.category)) {
+         objOfArrays[object.category].push(object);
+      } else {
+         objOfArrays[object.category] = [object];
+      }
+   });
+   // console.log(objOfArrays);   
+   return objOfArrays;
 }
 
 
@@ -136,10 +152,9 @@ export default {
    createItem, 
    editItem, 
    deleteItem, 
-   archiveItem, 
-   activateItem, 
    deleteAllItems, 
    archiveAllItems,
    getList,
    getItem,
+   filterNotes,
 }
