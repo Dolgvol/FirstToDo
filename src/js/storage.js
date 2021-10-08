@@ -1,5 +1,5 @@
 "use strict"
-import {makeItem, getCurrentDate} from './helpers';
+import {makeItem} from './helpers';
 
 
 const initialNotes = [
@@ -96,9 +96,21 @@ function deleteItem(id) {
    return res;
 }
 
-function deleteAllItems() {
-   state.itemsNotes = [];
-   return true;
+function deleteAllItems(filter) {
+   let res = false;
+   if (filter === 'all') {
+      res = true;
+      state.itemsNotes = [];
+   }
+   if (filter === 'active') {
+      res = true;
+      state.itemsNotes = state.itemsNotes.filter(obj => obj.active === false);
+   }
+   if (filter === 'archived') {
+      res = true;
+      state.itemsNotes = state.itemsNotes.filter(obj => obj.active === true);
+   }
+   return res;
 }
 
 function archiveAllItems() {
@@ -117,7 +129,11 @@ function archiveAllItems() {
 }
 
 function getItem(id) {
-   return state.itemsNotes.find((itemNote) => itemNote.id === Number(id));
+    const currItem = state.itemsNotes.find((itemNote) => itemNote.id === Number(id));
+    if (!currItem) {
+      throw new Error('id не существует');
+    } 
+    return currItem;
 }
 
 function getList(filter) {

@@ -18,15 +18,13 @@ const closeModalButtons = document.querySelectorAll('.close-btn-modal');
 
 let stateOfList = 'active';
 if (filterBlock) {
-   filterBlock.addEventListener("change", (event) => {
+   filterBlock.addEventListener("change", () => {
       
       if (filterBlock.value === 'active') {
-
          stateOfList = 'active';
          renderTable();
       }
       if (filterBlock.value === 'archived') {
-
          stateOfList = 'archived';
          renderTable();
       }
@@ -44,14 +42,22 @@ if (mainTable) {
 
          if (actionEl && actionEl.dataset.action === 'open') {
             viewModal.style.display = 'block'; 
-            const currentItem = Storage.getItem(actionEl.dataset.id);
-            renderViewModal(currentItem);
+            try {
+               const currentItem = Storage.getItem(actionEl.dataset.id);
+               renderViewModal(currentItem);
+             } catch (err) {    
+               alert(err.message);    
+             }
           }
          
          if (actionEl && actionEl.dataset.action === 'edit') {
             createEditModal.style.display = 'block';
-            const currentItem = Storage.getItem(actionEl.dataset.id);
-            renderEditModal(currentItem);
+            try {
+               const currentItem = Storage.getItem(actionEl.dataset.id);
+               renderEditModal(currentItem);
+            } catch (err) {    
+               alert(err.message);    
+             }
           }
 
          if (actionEl && actionEl.dataset.action === 'create') {
@@ -88,7 +94,7 @@ if (mainTable) {
          }
 
          if (actionEl && actionEl.dataset.action === 'delete-all') {
-            if (Storage.deleteAllItems()) {
+            if (Storage.deleteAllItems(stateOfList)) {
                renderTable();
                renderCategoryCounter();
             }
@@ -104,9 +110,14 @@ formMain.addEventListener("submit", (event) => {
    const id = formMain.elements.id.value;
 
    if (action === 'edit') {
-      Storage.editItem(id, createPayload(Storage.getItem(id).active));
+      try {
+         Storage.editItem(id, createPayload(Storage.getItem(id).active));
+       } catch (err) {    
+         alert(err.message);    
+       }
       createEditModal.style.display = 'none'; 
-      renderTable();    
+      renderTable();   
+      renderCategoryCounter();  
    }
    if (action === 'create') {
       Storage.createItem(createPayload());
@@ -280,7 +291,6 @@ function renderViewModal(object) {
    </div>`;
 }
 
-
 function renderEditModal(object) {
     formMain.elements.category.value = object.category;
     formMain.elements.name.value = object.name;
@@ -296,7 +306,6 @@ function renderCreateModal() {
    formMain.elements.action.value = 'create';
    formMain.elements.id.value = null;
 }
-
 
 renderCategoryCounter();
 function renderCategoryCounter() {
@@ -323,8 +332,6 @@ function renderCategoryCounter() {
       });
    }
 }
-
-
 
 
 function createPayload(status = true) {
