@@ -19,19 +19,23 @@ const closeModalButtons = document.querySelectorAll('.close-btn-modal');
 let stateOfList = 'active';
 if (filterBlock) {
    filterBlock.addEventListener("change", () => {
-      
-      if (filterBlock.value === 'active') {
-         stateOfList = 'active';
-         renderTable();
-      }
-      if (filterBlock.value === 'archived') {
-         stateOfList = 'archived';
-         renderTable();
-      }
-      if (filterBlock.value === 'all') {
-         stateOfList = 'all';
-         renderTable();
-      }
+
+      switch (filterBlock.value) {
+         case 'active':
+            stateOfList = 'active';
+            renderTable();
+            break;
+
+         case 'archived':
+            stateOfList = 'archived';
+            renderTable();
+            break;
+
+         case 'all':
+            stateOfList = 'all';
+            renderTable();
+            break;
+     }      
    });
 }
 
@@ -40,64 +44,68 @@ if (mainTable) {
          let actionEl = event.target.closest('[data-action]');
          // console.log(actionEl);
 
-         if (actionEl && actionEl.dataset.action === 'open') {
-            viewModal.style.display = 'block'; 
-            try {
-               const currentItem = Storage.getItem(actionEl.dataset.id);
-               renderViewModal(currentItem);
-             } catch (err) {    
-               alert(err.message);    
-             }
-          }
-         
-         if (actionEl && actionEl.dataset.action === 'edit') {
-            createEditModal.style.display = 'block';
-            try {
-               const currentItem = Storage.getItem(actionEl.dataset.id);
-               renderEditModal(currentItem);
-            } catch (err) {    
-               alert(err.message);    
-             }
-          }
+         if (actionEl) {
+            switch (actionEl.dataset.action) {
+               case 'open':
+                  viewModal.style.display = 'block'; 
+                  try {
+                     const currentItem = Storage.getItem(actionEl.dataset.id);
+                     renderViewModal(currentItem);
+                   } catch (err) {    
+                     alert(err.message);    
+                   }
+                  break;
 
-         if (actionEl && actionEl.dataset.action === 'create') {
-            createEditModal.style.display = 'block';         
-            renderCreateModal();
-         }
-          
-         if (actionEl && actionEl.dataset.action === 'delete') {
-            if (Storage.deleteItem(actionEl.dataset.id)) {
-               renderTable();
-               renderCategoryCounter();
-            }
-         }
+               case 'edit':
+                  createEditModal.style.display = 'block';
+                  try {
+                     const currentItem = Storage.getItem(actionEl.dataset.id);
+                     renderEditModal(currentItem);
+                  } catch (err) {    
+                     alert(err.message);    
+                   }
+                  break;
 
-         if (actionEl && actionEl.dataset.action === 'archive') {
-            if (Storage.editItem(actionEl.dataset.id, {active: false})) {
-               renderTable();
-               renderCategoryCounter();
-            }
-         }
+               case 'create':
+                  createEditModal.style.display = 'block';         
+                  renderCreateModal();
+                  break;
+                  
+               case 'delete':
+                  if (Storage.deleteItem(actionEl.dataset.id)) {
+                     renderTable();
+                     renderCategoryCounter();
+                  }
+                  break;
 
-         if (actionEl && actionEl.dataset.action === 'activate') {
-            if (Storage.editItem(actionEl.dataset.id, {active: true})) {
-               renderTable();
-               renderCategoryCounter();
-            }
-         }
+               case 'archive':
+                  if (Storage.editItem(actionEl.dataset.id, {active: false})) {
+                     renderTable();
+                     renderCategoryCounter();
+                  }
+                  break;
 
-         if (actionEl && actionEl.dataset.action === 'archive-all') {
-            if (Storage.archiveAllItems()) {
-               renderTable();
-               renderCategoryCounter();
-            }
-         }
+               case 'activate':
+                  if (Storage.editItem(actionEl.dataset.id, {active: true})) {
+                     renderTable();
+                     renderCategoryCounter();
+                  }
+                  break;
 
-         if (actionEl && actionEl.dataset.action === 'delete-all') {
-            if (Storage.deleteAllItems(stateOfList)) {
-               renderTable();
-               renderCategoryCounter();
-            }
+               case 'archive-all':
+                  if (Storage.archiveAllItems()) {
+                     renderTable();
+                     renderCategoryCounter();
+                  }
+                  break;
+
+               case 'delete-all':
+                  if (Storage.deleteAllItems(stateOfList)) {
+                     renderTable();
+                     renderCategoryCounter();
+                  }
+                  break;
+           }
          }
 
       });
@@ -119,6 +127,7 @@ formMain.addEventListener("submit", (event) => {
       renderTable();   
       renderCategoryCounter();  
    }
+
    if (action === 'create') {
       Storage.createItem(createPayload());
       createEditModal.style.display = 'none'; 
@@ -179,27 +188,32 @@ function renderTable() {
          xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M296 384h-80c-13.3 0-24-10.7-24-24V192h-87.7c-17.8 0-26.7-21.5-14.1-34.1L242.3 5.7c7.5-7.5 19.8-7.5 27.3 0l152.2 152.2c12.6 12.6 3.7 34.1-14.1 34.1H320v168c0 13.3-10.7 24-24 24zm216-8v112c0 13.3-10.7 24-24 24H24c-13.3 0-24-10.7-24-24V376c0-13.3 10.7-24 24-24h136v8c0 30.9 25.1 56 56 56h80c30.9 0 56-25.1 56-56v-8h136c13.3 0 24 10.7 24 24zm-124 88c0-11-9-20-20-20s-20 9-20 20 9 20 20 20 20-9 20-20zm64 0c0-11-9-20-20-20s-20 9-20 20 9 20 20 20 20-9 20-20z"></path></svg>
          </a>`;
       }
-      if (object.category === 'Task') {
-         categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="shopping-cart" 
-         class="fa-shopping-cart w-svg" role="img" 
-         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z"></path></svg>
-         `;
-      } 
-      if (object.category === 'Random Thought') {
-         categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="brain" 
-         class="fa-brain w-svg" role="img" 
-         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M208 0c-29.9 0-54.7 20.5-61.8 48.2-.8 0-1.4-.2-2.2-.2-35.3 0-64 28.7-64 64 0 4.8.6 9.5 1.7 14C52.5 138 32 166.6 32 200c0 12.6 3.2 24.3 8.3 34.9C16.3 248.7 0 274.3 0 304c0 33.3 20.4 61.9 49.4 73.9-.9 4.6-1.4 9.3-1.4 14.1 0 39.8 32.2 72 72 72 4.1 0 8.1-.5 12-1.2 9.6 28.5 36.2 49.2 68 49.2 39.8 0 72-32.2 72-72V64c0-35.3-28.7-64-64-64zm368 304c0-29.7-16.3-55.3-40.3-69.1 5.2-10.6 8.3-22.3 8.3-34.9 0-33.4-20.5-62-49.7-74 1-4.5 1.7-9.2 1.7-14 0-35.3-28.7-64-64-64-.8 0-1.5.2-2.2.2C422.7 20.5 397.9 0 368 0c-35.3 0-64 28.6-64 64v376c0 39.8 32.2 72 72 72 31.8 0 58.4-20.7 68-49.2 3.9.7 7.9 1.2 12 1.2 39.8 0 72-32.2 72-72 0-4.8-.5-9.5-1.4-14.1 29-12 49.4-40.6 49.4-73.9z"></path></svg>
-       `;
-      } 
-      if (object.category === 'Idea') {
-         categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="far" data-icon="lightbulb" 
-         class="fa-lightbulb w-svg" role="img" 
-         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path d="M176 80c-52.94 0-96 43.06-96 96 0 8.84 7.16 16 16 16s16-7.16 16-16c0-35.3 28.72-64 64-64 8.84 0 16-7.16 16-16s-7.16-16-16-16zM96.06 459.17c0 3.15.93 6.22 2.68 8.84l24.51 36.84c2.97 4.46 7.97 7.14 13.32 7.14h78.85c5.36 0 10.36-2.68 13.32-7.14l24.51-36.84c1.74-2.62 2.67-5.7 2.68-8.84l.05-43.18H96.02l.04 43.18zM176 0C73.72 0 0 82.97 0 176c0 44.37 16.45 84.85 43.56 115.78 16.64 18.99 42.74 58.8 52.42 92.16v.06h48v-.12c-.01-4.77-.72-9.51-2.15-14.07-5.59-17.81-22.82-64.77-62.17-109.67-20.54-23.43-31.52-53.15-31.61-84.14-.2-73.64 59.67-128 127.95-128 70.58 0 128 57.42 128 128 0 30.97-11.24 60.85-31.65 84.14-39.11 44.61-56.42 91.47-62.1 109.46a47.507 47.507 0 0 0-2.22 14.3v.1h48v-.05c9.68-33.37 35.78-73.18 52.42-92.16C335.55 260.85 352 220.37 352 176 352 78.8 273.2 0 176 0z"></path></svg>
-       `;
-      } 
-      if (object.category === '') {
-         categorySvg = ``;
-      } 
+      switch (object.category) {
+         case 'Task':
+            categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="shopping-cart" 
+            class="fa-shopping-cart w-svg" role="img" 
+            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z"></path></svg>
+            `;
+            break;
+
+         case 'Random Thought':
+            categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="brain" 
+            class="fa-brain w-svg" role="img" 
+            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M208 0c-29.9 0-54.7 20.5-61.8 48.2-.8 0-1.4-.2-2.2-.2-35.3 0-64 28.7-64 64 0 4.8.6 9.5 1.7 14C52.5 138 32 166.6 32 200c0 12.6 3.2 24.3 8.3 34.9C16.3 248.7 0 274.3 0 304c0 33.3 20.4 61.9 49.4 73.9-.9 4.6-1.4 9.3-1.4 14.1 0 39.8 32.2 72 72 72 4.1 0 8.1-.5 12-1.2 9.6 28.5 36.2 49.2 68 49.2 39.8 0 72-32.2 72-72V64c0-35.3-28.7-64-64-64zm368 304c0-29.7-16.3-55.3-40.3-69.1 5.2-10.6 8.3-22.3 8.3-34.9 0-33.4-20.5-62-49.7-74 1-4.5 1.7-9.2 1.7-14 0-35.3-28.7-64-64-64-.8 0-1.5.2-2.2.2C422.7 20.5 397.9 0 368 0c-35.3 0-64 28.6-64 64v376c0 39.8 32.2 72 72 72 31.8 0 58.4-20.7 68-49.2 3.9.7 7.9 1.2 12 1.2 39.8 0 72-32.2 72-72 0-4.8-.5-9.5-1.4-14.1 29-12 49.4-40.6 49.4-73.9z"></path></svg>
+            `;
+            break;
+
+         case 'Idea':
+            categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="far" data-icon="lightbulb" 
+            class="fa-lightbulb w-svg" role="img" 
+            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path d="M176 80c-52.94 0-96 43.06-96 96 0 8.84 7.16 16 16 16s16-7.16 16-16c0-35.3 28.72-64 64-64 8.84 0 16-7.16 16-16s-7.16-16-16-16zM96.06 459.17c0 3.15.93 6.22 2.68 8.84l24.51 36.84c2.97 4.46 7.97 7.14 13.32 7.14h78.85c5.36 0 10.36-2.68 13.32-7.14l24.51-36.84c1.74-2.62 2.67-5.7 2.68-8.84l.05-43.18H96.02l.04 43.18zM176 0C73.72 0 0 82.97 0 176c0 44.37 16.45 84.85 43.56 115.78 16.64 18.99 42.74 58.8 52.42 92.16v.06h48v-.12c-.01-4.77-.72-9.51-2.15-14.07-5.59-17.81-22.82-64.77-62.17-109.67-20.54-23.43-31.52-53.15-31.61-84.14-.2-73.64 59.67-128 127.95-128 70.58 0 128 57.42 128 128 0 30.97-11.24 60.85-31.65 84.14-39.11 44.61-56.42 91.47-62.1 109.46a47.507 47.507 0 0 0-2.22 14.3v.1h48v-.05c9.68-33.37 35.78-73.18 52.42-92.16C335.55 260.85 352 220.37 352 176 352 78.8 273.2 0 176 0z"></path></svg>
+            `;
+            break;
+
+         case '':
+            categorySvg = ``;
+            break;
+      }
       newDiv.innerHTML = `
       <div class="item-icon item-cell">
         <div class="icon-wrapper">
@@ -245,24 +259,28 @@ function renderTable() {
 function renderViewModal(object) {
    const viewModal = document.getElementById('modal-view-block1');
    let categorySvg = '';
-   if (object.category === 'Task') {
-      categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="shopping-cart" 
-      class="fa-shopping-cart w-svg" role="img" 
-      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z"></path></svg>
-      `;
-   } 
-   if (object.category === 'Random Thought') {
-      categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="brain" 
-      class="fa-brain w-svg" role="img" 
-      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M208 0c-29.9 0-54.7 20.5-61.8 48.2-.8 0-1.4-.2-2.2-.2-35.3 0-64 28.7-64 64 0 4.8.6 9.5 1.7 14C52.5 138 32 166.6 32 200c0 12.6 3.2 24.3 8.3 34.9C16.3 248.7 0 274.3 0 304c0 33.3 20.4 61.9 49.4 73.9-.9 4.6-1.4 9.3-1.4 14.1 0 39.8 32.2 72 72 72 4.1 0 8.1-.5 12-1.2 9.6 28.5 36.2 49.2 68 49.2 39.8 0 72-32.2 72-72V64c0-35.3-28.7-64-64-64zm368 304c0-29.7-16.3-55.3-40.3-69.1 5.2-10.6 8.3-22.3 8.3-34.9 0-33.4-20.5-62-49.7-74 1-4.5 1.7-9.2 1.7-14 0-35.3-28.7-64-64-64-.8 0-1.5.2-2.2.2C422.7 20.5 397.9 0 368 0c-35.3 0-64 28.6-64 64v376c0 39.8 32.2 72 72 72 31.8 0 58.4-20.7 68-49.2 3.9.7 7.9 1.2 12 1.2 39.8 0 72-32.2 72-72 0-4.8-.5-9.5-1.4-14.1 29-12 49.4-40.6 49.4-73.9z"></path></svg>
-    `;
-   } 
-   if (object.category === 'Idea') {
-      categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="far" data-icon="lightbulb" 
-      class="fa-lightbulb w-svg" role="img" 
-      xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path d="M176 80c-52.94 0-96 43.06-96 96 0 8.84 7.16 16 16 16s16-7.16 16-16c0-35.3 28.72-64 64-64 8.84 0 16-7.16 16-16s-7.16-16-16-16zM96.06 459.17c0 3.15.93 6.22 2.68 8.84l24.51 36.84c2.97 4.46 7.97 7.14 13.32 7.14h78.85c5.36 0 10.36-2.68 13.32-7.14l24.51-36.84c1.74-2.62 2.67-5.7 2.68-8.84l.05-43.18H96.02l.04 43.18zM176 0C73.72 0 0 82.97 0 176c0 44.37 16.45 84.85 43.56 115.78 16.64 18.99 42.74 58.8 52.42 92.16v.06h48v-.12c-.01-4.77-.72-9.51-2.15-14.07-5.59-17.81-22.82-64.77-62.17-109.67-20.54-23.43-31.52-53.15-31.61-84.14-.2-73.64 59.67-128 127.95-128 70.58 0 128 57.42 128 128 0 30.97-11.24 60.85-31.65 84.14-39.11 44.61-56.42 91.47-62.1 109.46a47.507 47.507 0 0 0-2.22 14.3v.1h48v-.05c9.68-33.37 35.78-73.18 52.42-92.16C335.55 260.85 352 220.37 352 176 352 78.8 273.2 0 176 0z"></path></svg>
-    `;
-   } 
+   switch (object.category) {
+      case 'Task':
+         categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="shopping-cart" 
+         class="fa-shopping-cart w-svg" role="img" 
+         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z"></path></svg>
+         `;
+         break;
+
+      case 'Random Thought':
+         categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="brain" 
+         class="fa-brain w-svg" role="img" 
+         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M208 0c-29.9 0-54.7 20.5-61.8 48.2-.8 0-1.4-.2-2.2-.2-35.3 0-64 28.7-64 64 0 4.8.6 9.5 1.7 14C52.5 138 32 166.6 32 200c0 12.6 3.2 24.3 8.3 34.9C16.3 248.7 0 274.3 0 304c0 33.3 20.4 61.9 49.4 73.9-.9 4.6-1.4 9.3-1.4 14.1 0 39.8 32.2 72 72 72 4.1 0 8.1-.5 12-1.2 9.6 28.5 36.2 49.2 68 49.2 39.8 0 72-32.2 72-72V64c0-35.3-28.7-64-64-64zm368 304c0-29.7-16.3-55.3-40.3-69.1 5.2-10.6 8.3-22.3 8.3-34.9 0-33.4-20.5-62-49.7-74 1-4.5 1.7-9.2 1.7-14 0-35.3-28.7-64-64-64-.8 0-1.5.2-2.2.2C422.7 20.5 397.9 0 368 0c-35.3 0-64 28.6-64 64v376c0 39.8 32.2 72 72 72 31.8 0 58.4-20.7 68-49.2 3.9.7 7.9 1.2 12 1.2 39.8 0 72-32.2 72-72 0-4.8-.5-9.5-1.4-14.1 29-12 49.4-40.6 49.4-73.9z"></path></svg>
+         `;
+         break;
+
+      case 'Idea':
+         categorySvg = `<svg width="20px" height="20px" fill="#ffffff" aria-hidden="true" focusable="false" data-prefix="far" data-icon="lightbulb" 
+         class="fa-lightbulb w-svg" role="img" 
+         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512"><path d="M176 80c-52.94 0-96 43.06-96 96 0 8.84 7.16 16 16 16s16-7.16 16-16c0-35.3 28.72-64 64-64 8.84 0 16-7.16 16-16s-7.16-16-16-16zM96.06 459.17c0 3.15.93 6.22 2.68 8.84l24.51 36.84c2.97 4.46 7.97 7.14 13.32 7.14h78.85c5.36 0 10.36-2.68 13.32-7.14l24.51-36.84c1.74-2.62 2.67-5.7 2.68-8.84l.05-43.18H96.02l.04 43.18zM176 0C73.72 0 0 82.97 0 176c0 44.37 16.45 84.85 43.56 115.78 16.64 18.99 42.74 58.8 52.42 92.16v.06h48v-.12c-.01-4.77-.72-9.51-2.15-14.07-5.59-17.81-22.82-64.77-62.17-109.67-20.54-23.43-31.52-53.15-31.61-84.14-.2-73.64 59.67-128 127.95-128 70.58 0 128 57.42 128 128 0 30.97-11.24 60.85-31.65 84.14-39.11 44.61-56.42 91.47-62.1 109.46a47.507 47.507 0 0 0-2.22 14.3v.1h48v-.05c9.68-33.37 35.78-73.18 52.42-92.16C335.55 260.85 352 220.37 352 176 352 78.8 273.2 0 176 0z"></path></svg>
+         `;
+         break;
+  }
    viewModal.innerHTML = ` 
    <div class="view-created">
    <div class="head-created">
